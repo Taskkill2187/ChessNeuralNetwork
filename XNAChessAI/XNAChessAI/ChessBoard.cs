@@ -26,6 +26,7 @@ namespace XNAChessAI
         int Turns = 0;
         public int EndedGameBecauseOfRecurrance = 0;
         public int NormallyEndedGames = 0;
+        public int AllowedRepetitions = 16;
 
         bool slow = false;
 
@@ -58,6 +59,11 @@ namespace XNAChessAI
             Turn = false;
             Winner = null;
             GameEnded = false;
+
+            if (PlayerTop.GetType() == typeof(ChessPlayerAI))
+                ((ChessPlayerAI)PlayerTop).IsTopPlayer = true;
+            if (PlayerBottom.GetType() == typeof(ChessPlayerAI))
+                ((ChessPlayerAI)PlayerBottom).IsTopPlayer = false;
 
             // Pawns
             for (int i = 0; i < 8; i++)
@@ -101,7 +107,10 @@ namespace XNAChessAI
             Turn = false;
             Winner = null;
             GameEnded = false;
-            
+
+            PlayerTop.NewMatchStarted(true);
+            PlayerBottom.NewMatchStarted(false);
+
             // Pawns
             for (int i = 0; i < 8; i++)
                 Pieces[i, 1] = new ChessPiece(PlayerTop, ChessPieceType.Pawn);
@@ -515,7 +524,7 @@ namespace XNAChessAI
                 Pieces[to.X, to.Y].HasMoved = true;
 
                 ThreefoldRepetitionCheck[to.X, to.Y, (int)Pieces[to.X, to.Y].Type + (Pieces[to.X, to.Y].Parent == PlayerBottom ? 0 : 6)]++;
-                if (ThreefoldRepetitionCheck[to.X, to.Y, (int)Pieces[to.X, to.Y].Type + (Pieces[to.X, to.Y].Parent == PlayerBottom ? 0 : 6)] >= 6)
+                if (ThreefoldRepetitionCheck[to.X, to.Y, (int)Pieces[to.X, to.Y].Type + (Pieces[to.X, to.Y].Parent == PlayerBottom ? 0 : 6)] >= AllowedRepetitions)
                     EndGameBecauseOfRecurrence(PlayerWhoHasTheMove());
 
                 Turn = !Turn;
@@ -530,6 +539,7 @@ namespace XNAChessAI
             GameLengths.Add(Turns);
             Turns = 0;
             EndedGameBecauseOfRecurrance++;
+            ClearThreefoldRepetitionCheck();
 
             if (FaultyPlayer == PlayerTop)
                 Winner = PlayerBottom;

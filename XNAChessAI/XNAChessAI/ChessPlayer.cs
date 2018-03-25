@@ -19,11 +19,15 @@ namespace XNAChessAI
             this.Parent = Parent;
         }
 
-        public void MovePiece(Point From, Point To)
+        public virtual void MovePiece(Point From, Point To)
         {
             Parent.MovePiece(From, To);
         }
 
+        public virtual void NewMatchStarted(bool IsTopPlayer)
+        {
+
+        }
         public virtual void TurnStarted()
         {
 

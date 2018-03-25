@@ -37,8 +37,13 @@ namespace XNAChessAI
 
             ChessAIEvolutionManager.CreateNewEvolution();
 
-            EvolutionThread = Task.Factory.StartNew(() => { while (DoingEvolution) ChessAIEvolutionManager.TestCurrentGeneration(); });
+            StartEvoThread();
             EvoControl = new ControlWidow(this);
+        }
+
+        public void StartEvoThread()
+        {
+            EvolutionThread = Task.Factory.StartNew(() => { while (DoingEvolution) ChessAIEvolutionManager.TestCurrentGeneration_Ver4Evo(); });
         }
 
         protected override void Initialize()
@@ -72,11 +77,7 @@ namespace XNAChessAI
                 }
             }
 
-            //if (Timer == 10)
-            //    GetHashCode();
-
-            Timer += 1;
-
+            Timer++;
             base.Update(gameTime);
         }
         

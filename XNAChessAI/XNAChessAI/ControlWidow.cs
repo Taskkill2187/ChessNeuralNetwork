@@ -35,7 +35,7 @@ namespace XNAChessAI
             {
                 GameReference.PlayingAgainstAI = false;
                 GameReference.DoingEvolution = true;
-                GameReference.EvolutionThread = Task.Factory.StartNew(() => { while (GameReference.DoingEvolution) ChessAIEvolutionManager.TestCurrentGeneration(); });
+                GameReference.StartEvoThread();
             }
         }
 

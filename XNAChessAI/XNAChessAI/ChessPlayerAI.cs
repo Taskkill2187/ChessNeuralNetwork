@@ -13,7 +13,7 @@ namespace XNAChessAI
     public class ChessPlayerAI : ChessPlayer, ICloneable
     {
         [XmlIgnore]
-        public ChessPlayerAINeuron[,] NeuronGrid = new ChessPlayerAINeuron[5, 64]; // frist layer = input, last layer = output
+        public ChessPlayerAINeuron[,] NeuronGrid = new ChessPlayerAINeuron[5, 64]; // layer, neuronindex | frist layer = input, last layer = output
         [XmlIgnore]
         public ChessPlayerAIAxon[,] Axons;
 
@@ -54,7 +54,11 @@ namespace XNAChessAI
 
         // Mutations
         public double MutationProbability = 0.3;
-        public double MutationStepSize = 0.5;
+        public double MutationStepSize = 0.4;
+
+        public int WinScore = 0;
+        public int KillScore = 0;
+        public bool IsTopPlayer;
 
         public ChessPlayerAI() : base()
         {
@@ -106,7 +110,13 @@ namespace XNAChessAI
                 i = 0;
             }
         }
-
+        
+        public static ChessPlayerAI GetRandomAI()
+        {
+            ChessPlayerAI re = new ChessPlayerAI();
+            re.GiveRandomWeights();
+            return re;
+        }
         public void GiveRandomWeights()
         {
             for (int x = 0; x < Axons.GetLength(0); x++)
@@ -123,7 +133,32 @@ namespace XNAChessAI
                 {
                     if (Values.RDM.NextDouble() < MutationProbability)
                     {
-                        Axons[x, y].weight += (float)((Values.RDM.NextDouble() - 0.5) * MutationStepSize);
+                        Axons[x, y].weight += (float)((Values.RDM.NextDouble() - 0.5) * 2 * MutationStepSize);
+
+                        if (Axons[x, y].weight > 1)
+                            Axons[x, y].weight = 1;
+                        if (Axons[x, y].weight < -1)
+                            Axons[x, y].weight = -1;
+                    }
+                }
+            }
+
+            MutationProbability *= 0.995;
+            MutationStepSize *= 0.996;
+            if (MutationProbability < 0.008)
+                MutationProbability = 0.008;
+            if (MutationStepSize < 0.3)
+                MutationStepSize = 0.3;
+        }
+        public void Mutate(double MutationProbability, double MutationStepSize)
+        {
+            for (int x = 0; x < Axons.GetLength(0); x++)
+            {
+                for (int y = 0; y < Axons.GetLength(1); y++)
+                {
+                    if (Values.RDM.NextDouble() < MutationProbability)
+                    {
+                        Axons[x, y].weight += (float)((Values.RDM.NextDouble() - 0.5) * 2 * MutationStepSize);
 
                         if (Axons[x, y].weight > 1)
                             Axons[x, y].weight = 1;
@@ -146,6 +181,12 @@ namespace XNAChessAI
             re.Mutate();
             return re;
         }
+        public ChessPlayerAI CreateOffspring(double MutationProbability, double MutationStepSize)
+        {
+            ChessPlayerAI re = (ChessPlayerAI)this.Clone();
+            re.Mutate(MutationProbability, MutationStepSize);
+            return re;
+        }
         public void UpdateAxon(ChessPlayerAIAxon Ax)
         {
             NeuronGrid[Ax.InputLayer + 1, Ax.OutputIndex].value += NeuronGrid[Ax.InputLayer, Ax.InputIndex].value * Ax.weight;
@@ -155,7 +196,12 @@ namespace XNAChessAI
             for (int x = 0; x < 8; x++)
                 for (int y = 0; y < 8; y++)
                 {
-                    ChessPiece Piece = Parent.GetChessPieceFromPoint(new Point(x, y));
+                    ChessPiece Piece;
+                    if (IsTopPlayer)
+                        Piece = Parent.GetChessPieceFromPoint(new Point(x, 7 - y));
+                    else
+                        Piece = Parent.GetChessPieceFromPoint(new Point(x, y));
+
                     if (Piece != null)
                     {
                         if (Piece.Parent == this)
@@ -185,17 +231,24 @@ namespace XNAChessAI
         public void SendTurn()
         {
             SendTurnObject[] Turns = new SendTurnObject[64];
-            for (int i = 0; i < NeuronGrid.GetLength(1); i++)
-                Turns[i] = new SendTurnObject(i % 8, i / 8, NeuronGrid[NeuronGrid.GetLength(0) - 1, i].value);
+            if (IsTopPlayer)
+                for (int i = 0; i < NeuronGrid.GetLength(1); i++)
+                    Turns[i] = new SendTurnObject(i % 8, i / 8, NeuronGrid[NeuronGrid.GetLength(0) - 1, i % 8 + (7 - (i / 8)) * 8].value);
+            else
+                for (int i = 0; i < NeuronGrid.GetLength(1); i++)
+                    Turns[i] = new SendTurnObject(i % 8, i / 8, NeuronGrid[NeuronGrid.GetLength(0) - 1, i].value);
 
-            Turns = Turns.OrderBy(x => x.value).ToArray();
+            Turns = Turns.OrderBy(x => -x.value).ToArray();
 
             for (int i = 0; i < Turns.Length; i++)
             {
-                ChessPiece Piece = Parent.GetChessPieceFromPoint(new Point(Turns[i].x, Turns[i].y));
+                ChessPiece Piece;
+                Piece = Parent.GetChessPieceFromPoint(new Point(Turns[i].x, Turns[i].y));
+
                 if (Piece != null && Piece.Parent.GetType() == typeof(ChessPlayerAI) && (ChessPlayerAI)Piece.Parent == this)
                 {
-                    Point[] Moves = Parent.GetAllPossibleMovesForPiece(new Point(Turns[i].x, Turns[i].y));
+                    Point[] Moves;
+                    Moves = Parent.GetAllPossibleMovesForPiece(new Point(Turns[i].x, Turns[i].y));
 
                     if (Moves.Length == 1)
                     {
@@ -217,7 +270,50 @@ namespace XNAChessAI
                 }
             }
         }
+        public void ResetScores()
+        {
+            WinScore = 0;
+            KillScore = 0;
+        }
 
+        public override void NewMatchStarted(bool IsTopPlayer)
+        {
+            this.IsTopPlayer = IsTopPlayer;
+        }
+        public override void MovePiece(Point From, Point To)
+        {
+            ChessPiece Piece = Parent.GetChessPieceFromPoint(To);
+            if (Piece != null)
+                switch (Piece.Type)
+                {
+                    case ChessPieceType.Pawn:
+                        KillScore += 10;
+                        break;
+
+                    case ChessPieceType.Knight:
+                        KillScore += 30;
+                        break;
+
+                    case ChessPieceType.Bishop:
+                        KillScore += 50;
+                        break;
+
+                    case ChessPieceType.Rook:
+                        KillScore += 40;
+                        break;
+
+                    case ChessPieceType.King:
+                        KillScore += 1000;
+                        WinScore += 1;
+                        break;
+
+                    case ChessPieceType.Queen:
+                        KillScore += 250;
+                        break;
+                }
+
+            base.MovePiece(From, To);
+        }
         public override void TurnStarted()
         {
             

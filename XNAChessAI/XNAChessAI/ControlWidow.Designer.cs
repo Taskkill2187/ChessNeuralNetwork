@@ -41,7 +41,7 @@
             this.playPauseButton.Name = "playPauseButton";
             this.playPauseButton.Size = new System.Drawing.Size(191, 23);
             this.playPauseButton.TabIndex = 0;
-            this.playPauseButton.Text = "Pause";
+            this.playPauseButton.Text = "Pause (and play against)";
             this.playPauseButton.UseVisualStyleBackColor = true;
             this.playPauseButton.Click += new System.EventHandler(this.playPauseButton_Click);
             // 
