@@ -47,7 +47,7 @@ namespace XNAChessAI
                                     re += 50;
                                     break;
                                 case ChessPieceType.Bishop:
-                                    re += 3;
+                                    re += 30;
                                     break;
                                 case ChessPieceType.Queen:
                                     re += 90;
@@ -71,7 +71,7 @@ namespace XNAChessAI
                                     re -= 50;
                                     break;
                                 case ChessPieceType.Bishop:
-                                    re -= 3;
+                                    re -= 30;
                                     break;
                                 case ChessPieceType.Queen:
                                     re -= 90;
@@ -103,29 +103,45 @@ namespace XNAChessAI
                 {
                     ChessBoard Clone = (ChessBoard)Board.Clone();
                     Clone.MovePiece(Moves[i].From, Moves[i].To);
-                    if (EvaluationFunction(Clone) < lastMove.rating)
+                    if (Clone.GameEnded && Clone.Winner != this)
                         continue;
+                    Moves[i].rating = EvaluationFunction(Clone);
+                    if (Moves[i].rating < lastMove.rating)
+                        break;
+                    if (Clone.Winner == this)
+                        return new Move(Moves[i].From, Moves[i].To, int.MaxValue);
                     Move minimax = MiniMax(depth - 1, Clone, Moves[i], !maximising);
                     if (minimax.rating > bestMove.rating)
                         bestMove = Moves[i];
                 }
+                if (bestMove.rating <= 0)
+                    bestMove = Moves.OrderBy(x => Values.RDM.Next(int.MaxValue)).OrderByDescending(x => x.rating).First();
+                if (bestMove.From == Point.Zero && bestMove.To == Point.Zero)
+                    Debug.WriteLine("well fuck");
                 return bestMove;
             }
             else
             {
+                Moves = GetAllMoves(Board, Board.GetOponent(this));
                 Move bestMove = new Move();
                 bestMove.rating = int.MaxValue;
-                Moves = GetAllMoves(Board, Board.GetOponent(this));
                 for (int i = 0; i < Moves.Length; i++)
                 {
                     ChessBoard Clone = (ChessBoard)Board.Clone();
                     Clone.MovePiece(Moves[i].From, Moves[i].To);
-                    if (EvaluationFunction(Clone) > lastMove.rating)
+                    if (Clone.GameEnded && Clone.Winner != this)
                         continue;
+                    Moves[i].rating = EvaluationFunction(Clone);
+                    if (Moves[i].rating > lastMove.rating)
+                        break;
                     Move minimax = MiniMax(depth - 1, Clone, Moves[i], !maximising);
                     if (minimax.rating < bestMove.rating)
                         bestMove = Moves[i];
                 }
+                if (bestMove.rating == 0)
+                    bestMove = Moves.OrderBy(x => Values.RDM.Next(int.MaxValue)).OrderByDescending(x => -x.rating).First();
+                if (bestMove.From == Point.Zero && bestMove.To == Point.Zero)
+                    Debug.WriteLine("well fuck");
                 return bestMove;
             }
         }
@@ -133,6 +149,12 @@ namespace XNAChessAI
         public override void Update()
         {
             Move minimax = MiniMax(4, Parent, new Move(), true);
+            if (minimax.From == Point.Zero && minimax.To == Point.Zero)
+            {
+                Debug.WriteLine("I dunnu wat im doin!");
+                Move[] moves = GetAllMoves(Parent, this);
+                minimax = moves[Values.RDM.Next(moves.Length)];
+            }
             Parent.MovePiece(minimax);
         }
     }

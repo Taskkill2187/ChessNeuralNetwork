@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 
 namespace XNAChessAI
@@ -26,7 +27,7 @@ namespace XNAChessAI
         protected int Turns = 0;
         public int EndedGameBecauseOfRecurrance = 0;
         public int NormallyEndedGames = 0;
-        public int AllowedRepetitions = 16;
+        public int AllowedRepetitions = 3;
 
         bool slow = false;
 
@@ -785,8 +786,8 @@ namespace XNAChessAI
                 if (Pieces[to.X, to.Y] == TopKing)
                 {
                     GameEnded = true;
+                    OnGameEnd();
                     Winner = PlayerBottom;
-
                     GameLengths.Add(Turns);
                     NormallyEndedGames++;
                     Turns = 0;
@@ -797,8 +798,8 @@ namespace XNAChessAI
                 if (Pieces[to.X, to.Y] == BottomKing)
                 {
                     GameEnded = true;
+                    OnGameEnd();
                     Winner = PlayerTop;
-
                     GameLengths.Add(Turns);
                     NormallyEndedGames++;
                     Turns = 0;
@@ -839,8 +840,8 @@ namespace XNAChessAI
                 if (Pieces[to.X, to.Y] == TopKing)
                 {
                     GameEnded = true;
+                    OnGameEnd();
                     Winner = PlayerBottom;
-
                     GameLengths.Add(Turns);
                     NormallyEndedGames++;
                     Turns = 0;
@@ -851,8 +852,8 @@ namespace XNAChessAI
                 if (Pieces[to.X, to.Y] == BottomKing)
                 {
                     GameEnded = true;
+                    OnGameEnd();
                     Winner = PlayerTop;
-
                     GameLengths.Add(Turns);
                     NormallyEndedGames++;
                     Turns = 0;
@@ -878,10 +879,10 @@ namespace XNAChessAI
         public void EndGameBecauseOfRecurrence(ChessPlayer FaultyPlayer)
         {
             GameEnded = true;
+            OnGameEnd();
             GameLengths.Add(Turns);
             Turns = 0;
             EndedGameBecauseOfRecurrance++;
-            ClearThreefoldRepetitionCheck();
 
             if (FaultyPlayer == PlayerTop)
                 Winner = PlayerBottom;
@@ -889,6 +890,10 @@ namespace XNAChessAI
                 Winner = PlayerTop;
             else
                 throw new Exception("wat");
+        }
+        public void OnGameEnd()
+        {
+            Debug.WriteLine("Ended");
         }
         public ChessPlayer GetOponent(ChessPlayer you)
         {
@@ -955,6 +960,7 @@ namespace XNAChessAI
                         }
                     }
                 }
+            re.ThreefoldRepetitionCheck = new int[8, 8, 12];
             for (int x = 0; x < ThreefoldRepetitionCheck.GetLength(0); x++)
                 for (int y = 0; y < ThreefoldRepetitionCheck.GetLength(1); y++)
                     for (int z = 0; z < ThreefoldRepetitionCheck.GetLength(2); z++)
@@ -972,6 +978,7 @@ namespace XNAChessAI
             re.GameLengths = GameLengths;
             re.NormallyEndedGames = NormallyEndedGames;
             re.Winner = Winner;
+            re.ThreefoldRepetitionCheck = new int[8, 8, 12];
             for (int x = 0; x < ThreefoldRepetitionCheck.GetLength(0); x++)
                 for (int y = 0; y < ThreefoldRepetitionCheck.GetLength(1); y++)
                     for (int z = 0; z < ThreefoldRepetitionCheck.GetLength(2); z++)

@@ -73,8 +73,9 @@ namespace XNAChessAI
 
                 if (TestBoard.GameEnded)
                 {
+                    Draw(gameTime);
                     Thread.Sleep(1500);
-                    TestBoard.SetUpNewGame(ChessAIEvolutionManager.Population[0], new ChessPlayerHuman(TestBoard));
+                    TestBoard.SetUpNewGame(new ChessPlayerMinMax(), new ChessPlayerHuman(TestBoard));
                 }
             }
 
