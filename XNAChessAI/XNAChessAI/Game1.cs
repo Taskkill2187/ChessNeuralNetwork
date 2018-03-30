@@ -20,8 +20,8 @@ namespace XNAChessAI
         SpriteBatch spriteBatch;
         int Timer;
 
-        public bool DoingEvolution = true;
-        public bool PlayingAgainstAI = false;
+        public bool DoingEvolution = false;
+        public bool PlayingAgainstAI = true;
         public Task EvolutionThread;
 
         public ChessBoard TestBoard = new ChessBoard();
@@ -56,6 +56,7 @@ namespace XNAChessAI
             spriteBatch = new SpriteBatch(GraphicsDevice);
             Assets.Load(Content, GraphicsDevice);
             EvoControl.Show();
+            TestBoard.SetUpNewGame(new ChessPlayerMinMax(), new ChessPlayerHuman(TestBoard));
         }
 
         protected override void Update(GameTime gameTime)

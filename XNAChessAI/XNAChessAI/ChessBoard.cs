@@ -8,22 +8,22 @@ namespace XNAChessAI
 {
     public class InvalidChessPiece : System.Exception { }
 
-    public class ChessBoard
+    public class ChessBoard : ICloneable
     {
         public ChessPlayer PlayerTop; // Blacc
         public ChessPlayer PlayerBottom; // White
-        ChessPiece TopKing;
-        ChessPiece BottomKing;
+        protected ChessPiece TopKing;
+        protected ChessPiece BottomKing;
 
-        ChessPiece[,] Pieces = new ChessPiece[8, 8];
-        int[,,] ThreefoldRepetitionCheck = new int[8, 8, 12];
-        bool Turn = false; // true = PlayerTop, flase = PlayerBottom
+        protected ChessPiece[,] Pieces = new ChessPiece[8, 8];
+        protected int[,,] ThreefoldRepetitionCheck = new int[8, 8, 12];
+        protected bool Turn = false; // true = PlayerTop, flase = PlayerBottom
         public const int ChessStatusBarHeight = 30;
         public const int ChessAIStatusDisplayWidth = 400;
         public const int ChessFieldSize = 80;
         public Point MouseSelection;
         public List<int> GameLengths = new List<int>();
-        int Turns = 0;
+        protected int Turns = 0;
         public int EndedGameBecauseOfRecurrance = 0;
         public int NormallyEndedGames = 0;
         public int AllowedRepetitions = 16;
@@ -424,6 +424,290 @@ namespace XNAChessAI
 
             return PossibleMoves.ToArray();
         }
+        public Point[] GetAllPossibleMovesForPiece(int fromX, int fromY)
+        {
+            if (fromX < 0 || fromY < 0 || fromX >= 8 || fromY >= 8 || Pieces[fromX, fromY] == null)
+                return new Point[0];
+
+            List<Point> PossibleMoves = new List<Point>();
+            Point UpLeft = new Point();
+            Point UpRight = new Point();
+            Point DownLeft = new Point();
+            Point DownRight = new Point();
+            Point RightUp = new Point();
+            Point RightDown = new Point();
+            Point LeftUp = new Point();
+            Point LeftDown = new Point();
+            Point Right = new Point();
+            Point Down = new Point();
+            Point Up = new Point();
+            Point Left = new Point();
+            Point P = new Point();
+
+            switch (Pieces[fromX, fromY].Type)
+            {
+                case ChessPieceType.Pawn:
+                    if (GetChessPieceFromPoint(fromX, fromY).Parent == PlayerTop)
+                    {
+                        if (Pieces[fromX, fromY].HasMoved)
+                        {
+                            if (IsFieldVacant(new Point(fromX, fromY + 1)))
+                                PossibleMoves.Add(new Point(fromX, fromY + 1));
+                        }
+                        else
+                        {
+                            if (IsFieldVacant(new Point(fromX, fromY + 1)))
+                            {
+                                PossibleMoves.Add(new Point(fromX, fromY + 1));
+                                if (IsFieldVacant(new Point(fromX, fromY + 2)))
+                                    PossibleMoves.Add(new Point(fromX, fromY + 2));
+                            }
+                        }
+
+                        Left = new Point(fromX - 1, fromY + 1);
+                        Right = new Point(fromX + 1, fromY + 1);
+
+                        if (IsFieldInBounds(Left) && GetChessPieceFromPoint(Left) != null && Pieces[Left.X, Left.Y].Parent == PlayerBottom)
+                            PossibleMoves.Add(Left);
+                        if (IsFieldInBounds(Right) && GetChessPieceFromPoint(Right) != null && Pieces[Right.X, Right.Y].Parent == PlayerBottom)
+                            PossibleMoves.Add(Right);
+                    }
+                    if (GetChessPieceFromPoint(fromX, fromY).Parent == PlayerBottom)
+                    {
+                        if (Pieces[fromX, fromY].HasMoved)
+                        {
+                            if (IsFieldVacant(new Point(fromX, fromY - 1)))
+                                PossibleMoves.Add(new Point(fromX, fromY - 1));
+                        }
+                        else
+                        {
+                            if (IsFieldVacant(new Point(fromX, fromY - 1)))
+                            {
+                                PossibleMoves.Add(new Point(fromX, fromY - 1));
+                                if (IsFieldVacant(new Point(fromX, fromY - 2)))
+                                    PossibleMoves.Add(new Point(fromX, fromY - 2));
+                            }
+                        }
+
+                        Left = new Point(fromX - 1, fromY - 1);
+                        Right = new Point(fromX + 1, fromY - 1);
+
+                        if (IsFieldInBounds(Left) && GetChessPieceFromPoint(Left) != null && Pieces[Left.X, Left.Y].Parent == PlayerTop)
+                            PossibleMoves.Add(Left);
+                        if (IsFieldInBounds(Right) && GetChessPieceFromPoint(Right) != null && Pieces[Right.X, Right.Y].Parent == PlayerTop)
+                            PossibleMoves.Add(Right);
+                    }
+                    break;
+
+                case ChessPieceType.Knight:
+                    UpLeft = new Point(fromX - 1, fromY - 2);
+                    UpRight = new Point(fromX + 1, fromY - 2);
+                    DownLeft = new Point(fromX - 1, fromY + 2);
+                    DownRight = new Point(fromX + 1, fromY + 2);
+                    RightUp = new Point(fromX + 2, fromY - 1);
+                    RightDown = new Point(fromX + 2, fromY + 1);
+                    LeftUp = new Point(fromX - 2, fromY - 1);
+                    LeftDown = new Point(fromX - 2, fromY + 1);
+
+                    if (CanPlayerMoveThere(PlayerWhoHasTheMove(), UpLeft))
+                        PossibleMoves.Add(UpLeft);
+                    if (CanPlayerMoveThere(PlayerWhoHasTheMove(), UpRight))
+                        PossibleMoves.Add(UpRight);
+                    if (CanPlayerMoveThere(PlayerWhoHasTheMove(), DownLeft))
+                        PossibleMoves.Add(DownLeft);
+                    if (CanPlayerMoveThere(PlayerWhoHasTheMove(), DownRight))
+                        PossibleMoves.Add(DownRight);
+                    if (CanPlayerMoveThere(PlayerWhoHasTheMove(), RightUp))
+                        PossibleMoves.Add(RightUp);
+                    if (CanPlayerMoveThere(PlayerWhoHasTheMove(), RightDown))
+                        PossibleMoves.Add(RightDown);
+                    if (CanPlayerMoveThere(PlayerWhoHasTheMove(), LeftUp))
+                        PossibleMoves.Add(LeftUp);
+                    if (CanPlayerMoveThere(PlayerWhoHasTheMove(), LeftDown))
+                        PossibleMoves.Add(LeftDown);
+                    break;
+
+                case ChessPieceType.King:
+                    UpLeft = new Point(fromX - 1, fromY - 1);
+                    UpRight = new Point(fromX + 1, fromY - 1);
+                    DownLeft = new Point(fromX - 1, fromY + 1);
+                    DownRight = new Point(fromX + 1, fromY + 1);
+                    Right = new Point(fromX + 1, fromY);
+                    Down = new Point(fromX, fromY + 1);
+                    Up = new Point(fromX, fromY - 1);
+                    Left = new Point(fromX - 1, fromY);
+
+                    if (CanPlayerMoveThere(PlayerWhoHasTheMove(), UpLeft))
+                        PossibleMoves.Add(UpLeft);
+                    if (CanPlayerMoveThere(PlayerWhoHasTheMove(), UpRight))
+                        PossibleMoves.Add(UpRight);
+                    if (CanPlayerMoveThere(PlayerWhoHasTheMove(), DownLeft))
+                        PossibleMoves.Add(DownLeft);
+                    if (CanPlayerMoveThere(PlayerWhoHasTheMove(), DownRight))
+                        PossibleMoves.Add(DownRight);
+                    if (CanPlayerMoveThere(PlayerWhoHasTheMove(), Right))
+                        PossibleMoves.Add(Right);
+                    if (CanPlayerMoveThere(PlayerWhoHasTheMove(), Down))
+                        PossibleMoves.Add(Down);
+                    if (CanPlayerMoveThere(PlayerWhoHasTheMove(), Up))
+                        PossibleMoves.Add(Up);
+                    if (CanPlayerMoveThere(PlayerWhoHasTheMove(), Left))
+                        PossibleMoves.Add(Left);
+                    break;
+
+                case ChessPieceType.Rook:
+                    P = new Point(fromX, fromY + 1);
+                    while (CanPlayerMoveThere(PlayerWhoHasTheMove(), P))
+                    {
+                        PossibleMoves.Add(new Point(P.X, P.Y));
+                        if (GetChessPieceFromPoint(P) != null && GetChessPieceFromPoint(P).Parent == PlayerWhoHasntTheMove())
+                            break;
+                        P.Y++;
+                    }
+
+                    P = new Point(fromX, fromY - 1);
+                    while (CanPlayerMoveThere(PlayerWhoHasTheMove(), P))
+                    {
+                        PossibleMoves.Add(new Point(P.X, P.Y));
+                        if (GetChessPieceFromPoint(P) != null && GetChessPieceFromPoint(P).Parent == PlayerWhoHasntTheMove())
+                            break;
+                        P.Y--;
+                    }
+
+                    P = new Point(fromX + 1, fromY);
+                    while (CanPlayerMoveThere(PlayerWhoHasTheMove(), P))
+                    {
+                        PossibleMoves.Add(new Point(P.X, P.Y));
+                        if (GetChessPieceFromPoint(P) != null && GetChessPieceFromPoint(P).Parent == PlayerWhoHasntTheMove())
+                            break;
+                        P.X++;
+                    }
+
+                    P = new Point(fromX - 1, fromY);
+                    while (CanPlayerMoveThere(PlayerWhoHasTheMove(), P))
+                    {
+                        PossibleMoves.Add(new Point(P.X, P.Y));
+                        if (GetChessPieceFromPoint(P) != null && GetChessPieceFromPoint(P).Parent == PlayerWhoHasntTheMove())
+                            break;
+                        P.X--;
+                    }
+                    break;
+
+                case ChessPieceType.Bishop:
+                    P = new Point(fromX + 1, fromY + 1);
+                    while (CanPlayerMoveThere(PlayerWhoHasTheMove(), P))
+                    {
+                        PossibleMoves.Add(new Point(P.X, P.Y));
+                        if (GetChessPieceFromPoint(P) != null && GetChessPieceFromPoint(P).Parent == PlayerWhoHasntTheMove())
+                            break;
+                        P.X++; P.Y++;
+                    }
+
+                    P = new Point(fromX - 1, fromY - 1);
+                    while (CanPlayerMoveThere(PlayerWhoHasTheMove(), P))
+                    {
+                        PossibleMoves.Add(new Point(P.X, P.Y));
+                        if (GetChessPieceFromPoint(P) != null && GetChessPieceFromPoint(P).Parent == PlayerWhoHasntTheMove())
+                            break;
+                        P.X--; P.Y--;
+                    }
+
+                    P = new Point(fromX + 1, fromY - 1);
+                    while (CanPlayerMoveThere(PlayerWhoHasTheMove(), P))
+                    {
+                        PossibleMoves.Add(new Point(P.X, P.Y));
+                        if (GetChessPieceFromPoint(P) != null && GetChessPieceFromPoint(P).Parent == PlayerWhoHasntTheMove())
+                            break;
+                        P.X++; P.Y--;
+                    }
+
+                    P = new Point(fromX - 1, fromY + 1);
+                    while (CanPlayerMoveThere(PlayerWhoHasTheMove(), P))
+                    {
+                        PossibleMoves.Add(new Point(P.X, P.Y));
+                        if (GetChessPieceFromPoint(P) != null && GetChessPieceFromPoint(P).Parent == PlayerWhoHasntTheMove())
+                            break;
+                        P.X--; P.Y++;
+                    }
+                    break;
+
+                case ChessPieceType.Queen:
+                    P = new Point(fromX, fromY + 1);
+                    while (CanPlayerMoveThere(PlayerWhoHasTheMove(), P))
+                    {
+                        PossibleMoves.Add(new Point(P.X, P.Y));
+                        if (GetChessPieceFromPoint(P) != null && GetChessPieceFromPoint(P).Parent == PlayerWhoHasntTheMove())
+                            break;
+                        P.Y++;
+                    }
+
+                    P = new Point(fromX, fromY - 1);
+                    while (CanPlayerMoveThere(PlayerWhoHasTheMove(), P))
+                    {
+                        PossibleMoves.Add(new Point(P.X, P.Y));
+                        if (GetChessPieceFromPoint(P) != null && GetChessPieceFromPoint(P).Parent == PlayerWhoHasntTheMove())
+                            break;
+                        P.Y--;
+                    }
+
+                    P = new Point(fromX + 1, fromY);
+                    while (CanPlayerMoveThere(PlayerWhoHasTheMove(), P))
+                    {
+                        PossibleMoves.Add(new Point(P.X, P.Y));
+                        if (GetChessPieceFromPoint(P) != null && GetChessPieceFromPoint(P).Parent == PlayerWhoHasntTheMove())
+                            break;
+                        P.X++;
+                    }
+
+                    P = new Point(fromX - 1, fromY);
+                    while (CanPlayerMoveThere(PlayerWhoHasTheMove(), P))
+                    {
+                        PossibleMoves.Add(new Point(P.X, P.Y));
+                        if (GetChessPieceFromPoint(P) != null && GetChessPieceFromPoint(P).Parent == PlayerWhoHasntTheMove())
+                            break;
+                        P.X--;
+                    }
+
+                    P = new Point(fromX + 1, fromY + 1);
+                    while (CanPlayerMoveThere(PlayerWhoHasTheMove(), P))
+                    {
+                        PossibleMoves.Add(new Point(P.X, P.Y));
+                        if (GetChessPieceFromPoint(P) != null && GetChessPieceFromPoint(P).Parent == PlayerWhoHasntTheMove())
+                            break;
+                        P.X++; P.Y++;
+                    }
+
+                    P = new Point(fromX - 1, fromY - 1);
+                    while (CanPlayerMoveThere(PlayerWhoHasTheMove(), P))
+                    {
+                        PossibleMoves.Add(new Point(P.X, P.Y));
+                        if (GetChessPieceFromPoint(P) != null && GetChessPieceFromPoint(P).Parent == PlayerWhoHasntTheMove())
+                            break;
+                        P.X--; P.Y--;
+                    }
+
+                    P = new Point(fromX + 1, fromY - 1);
+                    while (CanPlayerMoveThere(PlayerWhoHasTheMove(), P))
+                    {
+                        PossibleMoves.Add(new Point(P.X, P.Y));
+                        if (GetChessPieceFromPoint(P) != null && GetChessPieceFromPoint(P).Parent == PlayerWhoHasntTheMove())
+                            break;
+                        P.X++; P.Y--;
+                    }
+
+                    P = new Point(fromX - 1, fromY + 1);
+                    while (CanPlayerMoveThere(PlayerWhoHasTheMove(), P))
+                    {
+                        PossibleMoves.Add(new Point(P.X, P.Y));
+                        if (GetChessPieceFromPoint(P) != null && GetChessPieceFromPoint(P).Parent == PlayerWhoHasntTheMove())
+                            break;
+                        P.X--; P.Y++;
+                    }
+                    break;
+            }
+
+            return PossibleMoves.ToArray();
+        }
         public bool IsFieldVacant(Point P)
         {
             return P.X >= 0 && P.Y >= 0 && P.X < 8 && P.Y < 8 && Pieces[P.X, P.Y] == null;
@@ -448,6 +732,10 @@ namespace XNAChessAI
         public ChessPiece GetChessPieceFromPoint(Point P)
         {
             return Pieces[P.X, P.Y];
+        }
+        public ChessPiece GetChessPieceFromPoint(int x, int y)
+        {
+            return Pieces[x, y];
         }
         public void DrawFieldAsSelected(Point P, Color Col, SpriteBatch SB)
         {
@@ -533,6 +821,60 @@ namespace XNAChessAI
             else
                 throw new ArgumentException();
         }
+        public void MovePiece(Move M)
+        {
+            if (slow)
+                Thread.Sleep(1000);
+
+            Point from = M.From;
+            Point to = M.To;
+
+            ChessPiece FromPiece = GetChessPieceFromPoint(from);
+            ChessPlayer MovePlayer = PlayerWhoHasTheMove();
+            List<Point> AllPossibleMoves = new List<Point>(GetAllPossibleMovesForPiece(from));
+            if (FromPiece.Parent == MovePlayer && AllPossibleMoves.Contains(to))
+            {
+                Turns++;
+
+                if (Pieces[to.X, to.Y] == TopKing)
+                {
+                    GameEnded = true;
+                    Winner = PlayerBottom;
+
+                    GameLengths.Add(Turns);
+                    NormallyEndedGames++;
+                    Turns = 0;
+
+                    if (slow)
+                        Thread.Sleep(3000);
+                }
+                if (Pieces[to.X, to.Y] == BottomKing)
+                {
+                    GameEnded = true;
+                    Winner = PlayerTop;
+
+                    GameLengths.Add(Turns);
+                    NormallyEndedGames++;
+                    Turns = 0;
+
+                    if (slow)
+                        Thread.Sleep(3000);
+                }
+
+                Pieces[to.X, to.Y] = Pieces[from.X, from.Y];
+                Pieces[from.X, from.Y] = null;
+                Pieces[to.X, to.Y].HasMoved = true;
+
+                ThreefoldRepetitionCheck[to.X, to.Y, (int)Pieces[to.X, to.Y].Type + (Pieces[to.X, to.Y].Parent == PlayerBottom ? 0 : 6)]++;
+                if (ThreefoldRepetitionCheck[to.X, to.Y, (int)Pieces[to.X, to.Y].Type + (Pieces[to.X, to.Y].Parent == PlayerBottom ? 0 : 6)] >= AllowedRepetitions)
+                    EndGameBecauseOfRecurrence(PlayerWhoHasTheMove());
+
+                Turn = !Turn;
+                PlayerWhoHasTheMove().TurnStarted();
+            }
+            else
+                throw new ArgumentException();
+        }
         public void EndGameBecauseOfRecurrence(ChessPlayer FaultyPlayer)
         {
             GameEnded = true;
@@ -547,6 +889,13 @@ namespace XNAChessAI
                 Winner = PlayerTop;
             else
                 throw new Exception("wat");
+        }
+        public ChessPlayer GetOponent(ChessPlayer you)
+        {
+            if (PlayerTop == you)
+                return PlayerBottom;
+            else
+                return PlayerTop;
         }
 
         public void Update()
@@ -585,6 +934,49 @@ namespace XNAChessAI
 
             if (MouseSelection.X >= 0)
                 DrawFieldAsSelected(MouseSelection, Color.White, SB);
+        }
+
+        public object Clone()
+        {
+            ChessBoard re = (ChessBoard)MemberwiseClone();
+            re.Pieces = new ChessPiece[8, 8];
+            for (int x = 0; x < Pieces.GetLength(0); x++)
+                for (int y = 0; y < Pieces.GetLength(1); y++)
+                {
+                    if (Pieces[x, y] != null)
+                    {
+                        re.Pieces[x, y] = (ChessPiece)Pieces[x, y].Clone();
+                        if (re.Pieces[x, y].Type == ChessPieceType.King)
+                        {
+                            if (re.Pieces[x, y].Parent == PlayerTop)
+                                re.TopKing = re.Pieces[x, y];
+                            else
+                                re.BottomKing = re.Pieces[x, y];
+                        }
+                    }
+                }
+            for (int x = 0; x < ThreefoldRepetitionCheck.GetLength(0); x++)
+                for (int y = 0; y < ThreefoldRepetitionCheck.GetLength(1); y++)
+                    for (int z = 0; z < ThreefoldRepetitionCheck.GetLength(2); z++)
+                        re.ThreefoldRepetitionCheck[x, y, z] = ThreefoldRepetitionCheck[x, y, z];
+            return re;
+        }
+        public ChessBoardImaginary ToImaginary()
+        {
+            ChessBoardImaginary re = new ChessBoardImaginary(this);
+            re.Turn = Turn;
+            re.Turns = Turns;
+            re.AllowedRepetitions = AllowedRepetitions;
+            re.EndedGameBecauseOfRecurrance = EndedGameBecauseOfRecurrance;
+            re.GameEnded = GameEnded;
+            re.GameLengths = GameLengths;
+            re.NormallyEndedGames = NormallyEndedGames;
+            re.Winner = Winner;
+            for (int x = 0; x < ThreefoldRepetitionCheck.GetLength(0); x++)
+                for (int y = 0; y < ThreefoldRepetitionCheck.GetLength(1); y++)
+                    for (int z = 0; z < ThreefoldRepetitionCheck.GetLength(2); z++)
+                        re.ThreefoldRepetitionCheck[x, y, z] = ThreefoldRepetitionCheck[x, y, z];
+            return re;
         }
     }
 }
