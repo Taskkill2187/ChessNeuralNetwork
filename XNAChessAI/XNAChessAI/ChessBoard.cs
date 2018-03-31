@@ -11,8 +11,12 @@ namespace XNAChessAI
 
     public class ChessBoard : ICloneable
     {
-        public ChessPlayer PlayerTop; // Blacc
-        public ChessPlayer PlayerBottom; // White
+        private ChessPlayer playerTop; // Blacc
+        private ChessPlayer playerBottom; // White
+        public ChessPlayer PlayerTop { get { return playerTop; } } // Blacc
+        public ChessPlayer PlayerBottom { get { return playerBottom; } } // White
+        public ChessPlayer PlayerBlack { get { return playerTop; } }
+        public ChessPlayer PlayerWhite { get { return playerBottom; } }
         protected ChessPiece TopKing;
         protected ChessPiece BottomKing;
 
@@ -36,15 +40,15 @@ namespace XNAChessAI
 
         public ChessBoard()
         {
-            PlayerTop = new ChessPlayerHuman(this);
-            PlayerBottom = new ChessPlayerHuman(this);
+            playerTop = new ChessPlayerHuman(this);
+            playerBottom = new ChessPlayerHuman(this);
 
             SetUpNewGame();
         }
         public ChessBoard(ChessPlayer PlayerOne, ChessPlayer PlayerTwo)
         {
-            PlayerTop = PlayerOne;
-            PlayerBottom = PlayerTwo;
+            playerTop = PlayerOne;
+            playerBottom = PlayerTwo;
 
             PlayerTop.Parent = this;
             PlayerBottom.Parent = this;
@@ -100,8 +104,8 @@ namespace XNAChessAI
             ClearPieces();
             ClearThreefoldRepetitionCheck();
 
-            this.PlayerTop = PlayerTop;
-            this.PlayerBottom = PlayerBottom;
+            this.playerTop = PlayerTop;
+            this.playerBottom = PlayerBottom;
             PlayerTop.Parent = this;
             PlayerBottom.Parent = this;
 
@@ -893,7 +897,7 @@ namespace XNAChessAI
         }
         public void OnGameEnd()
         {
-            Debug.WriteLine("Ended");
+            //Debug.WriteLine("Ended");
         }
         public ChessPlayer GetOponent(ChessPlayer you)
         {

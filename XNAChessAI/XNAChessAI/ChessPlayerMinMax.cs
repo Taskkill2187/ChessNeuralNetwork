@@ -9,6 +9,61 @@ namespace XNAChessAI
 {
     class ChessPlayerMinMax : ChessPlayer
     {
+        static int[] pawnScores = {
+0,  0,  0,  0,  0,  0,  0,  0,
+50, 50, 50, 50, 50, 50, 50, 50,
+10, 10, 20, 30, 30, 20, 10, 10,
+ 5,  5, 10, 25, 25, 10,  5,  5,
+ 0,  0,  0, 20, 20,  0,  0,  0,
+ 5, -5,-10,  0,  0,-10, -5,  5,
+ 5, 10, 10,-20,-20, 10, 10,  5,
+ 0,  0,  0,  0,  0,  0,  0,  0 };
+        static int[] knightScores = {
+-50,-40,-30,-30,-30,-30,-40,-50,
+-40,-20,  0,  0,  0,  0,-20,-40,
+-30,  0, 10, 15, 15, 10,  0,-30,
+-30,  5, 15, 20, 20, 15,  5,-30,
+-30,  0, 15, 20, 20, 15,  0,-30,
+-30,  5, 10, 15, 15, 10,  5,-30,
+-40,-20,  0,  5,  5,  0,-20,-40,
+-50,-40,-30,-30,-30,-30,-40,-50 };
+        static int[] bishopScores = {
+-20,-10,-10,-10,-10,-10,-10,-20,
+-10,  0,  0,  0,  0,  0,  0,-10,
+-10,  0,  5, 10, 10,  5,  0,-10,
+-10,  5,  5, 10, 10,  5,  5,-10,
+-10,  0, 10, 10, 10, 10,  0,-10,
+-10, 10, 10, 10, 10, 10, 10,-10,
+-10,  5,  0,  0,  0,  0,  5,-10,
+-20,-10,-10,-10,-10,-10,-10,-20 };
+        static int[] rookScores = {
+ 0,  0,  0,  0,  0,  0,  0,  0,
+ 5, 10, 10, 10, 10, 10, 10,  5,
+-5,  0,  0,  0,  0,  0,  0, -5,
+-5,  0,  0,  0,  0,  0,  0, -5,
+-5,  0,  0,  0,  0,  0,  0, -5,
+-5,  0,  0,  0,  0,  0,  0, -5,
+-5,  0,  0,  0,  0,  0,  0, -5,
+ 0,  0,  0,  5,  5,  0,  0,  0 };
+        static int[] queenScores = {
+-20,-10,-10, -5, -5,-10,-10,-20,
+-10,  0,  0,  0,  0,  0,  0,-10,
+-10,  0,  5,  5,  5,  5,  0,-10,
+ -5,  0,  5,  5,  5,  5,  0, -5,
+  0,  0,  5,  5,  5,  5,  0, -5,
+-10,  5,  5,  5,  5,  5,  0,-10,
+-10,  0,  5,  0,  0,  0,  0,-10,
+-20,-10,-10, -5, -5,-10,-10,-20 };
+        static int[] kingScores = {
+-30,-40,-40,-50,-50,-40,-40,-30,
+-30,-40,-40,-50,-50,-40,-40,-30,
+-30,-40,-40,-50,-50,-40,-40,-30,
+-30,-40,-40,-50,-50,-40,-40,-30,
+-20,-30,-30,-40,-40,-30,-30,-20,
+-10,-20,-20,-20,-20,-20,-20,-10,
+ 20, 20,  0,  0,  0,  0, 20, 20,
+ 20, 30, 10,  0,  0, 10, 30, 20 };
+        
         public Move[] GetAllMoves(ChessBoard Board, ChessPlayer Player)
         {
             List<Move> moves = new List<Move>(8 * 8);
@@ -35,50 +90,104 @@ namespace XNAChessAI
                     {
                         if (Piece.Parent == this)
                         {
-                            switch (Piece.Type)
+                            if (this == Board.PlayerBottom)
                             {
-                                case ChessPieceType.Pawn:
-                                    re += 10;
-                                    break;
-                                case ChessPieceType.Knight:
-                                    re += 30;
-                                    break;
-                                case ChessPieceType.Rook:
-                                    re += 50;
-                                    break;
-                                case ChessPieceType.Bishop:
-                                    re += 30;
-                                    break;
-                                case ChessPieceType.Queen:
-                                    re += 90;
-                                    break;
-                                case ChessPieceType.King:
-                                    re += 900;
-                                    break;
+                                switch (Piece.Type)
+                                {
+                                    case ChessPieceType.Pawn:
+                                        re += 10 + pawnScores[x + y * 8];
+                                        break;
+                                    case ChessPieceType.Knight:
+                                        re += 30 + knightScores[x + y * 8];
+                                        break;
+                                    case ChessPieceType.Rook:
+                                        re += 50 + rookScores[x + y * 8];
+                                        break;
+                                    case ChessPieceType.Bishop:
+                                        re += 30 + bishopScores[x + y * 8];
+                                        break;
+                                    case ChessPieceType.Queen:
+                                        re += 90 + queenScores[x + y * 8];
+                                        break;
+                                    case ChessPieceType.King:
+                                        re += 900 + kingScores[x + y * 8];
+                                        break;
+                                }
+                            }
+                            else
+                            {
+                                switch (Piece.Type)
+                                {
+                                    case ChessPieceType.Pawn:
+                                        re += 10 + pawnScores[x + (7 - y) * 8];
+                                        break;
+                                    case ChessPieceType.Knight:
+                                        re += 30 + knightScores[x + (7 - y) * 8];
+                                        break;
+                                    case ChessPieceType.Rook:
+                                        re += 50 + rookScores[x + (7 - y) * 8];
+                                        break;
+                                    case ChessPieceType.Bishop:
+                                        re += 30 + bishopScores[x + (7 - y) * 8];
+                                        break;
+                                    case ChessPieceType.Queen:
+                                        re += 90 + queenScores[x + (7 - y) * 8];
+                                        break;
+                                    case ChessPieceType.King:
+                                        re += 900 + kingScores[x + (7 - y) * 8];
+                                        break;
+                                }
                             }
                         }
                         else
                         {
-                            switch (Piece.Type)
+                            if (Board.GetOponent(this) == Board.PlayerBottom)
                             {
-                                case ChessPieceType.Pawn:
-                                    re -= 10;
-                                    break;
-                                case ChessPieceType.Knight:
-                                    re -= 30;
-                                    break;
-                                case ChessPieceType.Rook:
-                                    re -= 50;
-                                    break;
-                                case ChessPieceType.Bishop:
-                                    re -= 30;
-                                    break;
-                                case ChessPieceType.Queen:
-                                    re -= 90;
-                                    break;
-                                case ChessPieceType.King:
-                                    re -= 900;
-                                    break;
+                                switch (Piece.Type)
+                                {
+                                    case ChessPieceType.Pawn:
+                                        re -= 10 + pawnScores[x + y * 8];
+                                        break;
+                                    case ChessPieceType.Knight:
+                                        re -= 30 + knightScores[x + y * 8];
+                                        break;
+                                    case ChessPieceType.Rook:
+                                        re -= 50 + rookScores[x + y * 8];
+                                        break;
+                                    case ChessPieceType.Bishop:
+                                        re -= 30 + bishopScores[x + y * 8];
+                                        break;
+                                    case ChessPieceType.Queen:
+                                        re -= 90 + queenScores[x + y * 8];
+                                        break;
+                                    case ChessPieceType.King:
+                                        re -= 900 + kingScores[x + y * 8];
+                                        break;
+                                }
+                            }
+                            else
+                            {
+                                switch (Piece.Type)
+                                {
+                                    case ChessPieceType.Pawn:
+                                        re -= 10 + pawnScores[x + (7 - y) * 8];
+                                        break;
+                                    case ChessPieceType.Knight:
+                                        re -= 30 + knightScores[x + (7 - y) * 8];
+                                        break;
+                                    case ChessPieceType.Rook:
+                                        re -= 50 + rookScores[x + (7 - y) * 8];
+                                        break;
+                                    case ChessPieceType.Bishop:
+                                        re -= 30 + bishopScores[x + (7 - y) * 8];
+                                        break;
+                                    case ChessPieceType.Queen:
+                                        re -= 90 + queenScores[x + (7 - y) * 8];
+                                        break;
+                                    case ChessPieceType.King:
+                                        re -= 900 + kingScores[x + (7 - y) * 8];
+                                        break;
+                                }
                             }
                         }
                     }
@@ -106,18 +215,16 @@ namespace XNAChessAI
                     if (Clone.GameEnded && Clone.Winner != this)
                         continue;
                     Moves[i].rating = EvaluationFunction(Clone);
-                    if (Moves[i].rating < lastMove.rating)
-                        break;
+                    //if (Moves[i].rating < lastMove.rating)
+                    //    continue;
                     if (Clone.Winner == this)
                         return new Move(Moves[i].From, Moves[i].To, int.MaxValue);
                     Move minimax = MiniMax(depth - 1, Clone, Moves[i], !maximising);
                     if (minimax.rating > bestMove.rating)
                         bestMove = Moves[i];
                 }
-                if (bestMove.rating <= 0)
+                if (bestMove.rating == 0)
                     bestMove = Moves.OrderBy(x => Values.RDM.Next(int.MaxValue)).OrderByDescending(x => x.rating).First();
-                if (bestMove.From == Point.Zero && bestMove.To == Point.Zero)
-                    Debug.WriteLine("well fuck");
                 return bestMove;
             }
             else
@@ -132,23 +239,21 @@ namespace XNAChessAI
                     if (Clone.GameEnded && Clone.Winner != this)
                         continue;
                     Moves[i].rating = EvaluationFunction(Clone);
-                    if (Moves[i].rating > lastMove.rating)
-                        break;
+                    //if (Moves[i].rating > lastMove.rating)
+                    //    continue;
                     Move minimax = MiniMax(depth - 1, Clone, Moves[i], !maximising);
                     if (minimax.rating < bestMove.rating)
                         bestMove = Moves[i];
                 }
                 if (bestMove.rating == 0)
                     bestMove = Moves.OrderBy(x => Values.RDM.Next(int.MaxValue)).OrderByDescending(x => -x.rating).First();
-                if (bestMove.From == Point.Zero && bestMove.To == Point.Zero)
-                    Debug.WriteLine("well fuck");
                 return bestMove;
             }
         }
         
         public override void Update()
         {
-            Move minimax = MiniMax(4, Parent, new Move(), true);
+            Move minimax = MiniMax(3, Parent, new Move(), true);
             if (minimax.From == Point.Zero && minimax.To == Point.Zero)
             {
                 Debug.WriteLine("I dunnu wat im doin!");

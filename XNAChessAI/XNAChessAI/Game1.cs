@@ -10,6 +10,7 @@ using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Windows.Forms;
 
 namespace XNAChessAI
 {
@@ -23,6 +24,7 @@ namespace XNAChessAI
         public bool DoingEvolution = false;
         public bool PlayingAgainstAI = true;
         public Task EvolutionThread;
+        public Task SetUpNewGameThread;
 
         public ChessBoard TestBoard = new ChessBoard();
         public ControlWidow EvoControl;
@@ -64,18 +66,21 @@ namespace XNAChessAI
             Control.Update();
             FPSCounter.Update(gameTime);
 
-            if (Control.CurKS.IsKeyDown(Keys.Escape))
+            if (Control.CurKS.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.Escape))
                 Exit();
 
             if (PlayingAgainstAI)
             {
                 TestBoard.Update();
 
-                if (TestBoard.GameEnded)
+                if (TestBoard.GameEnded && SetUpNewGameThread == null)
                 {
-                    Draw(gameTime);
-                    Thread.Sleep(1500);
-                    TestBoard.SetUpNewGame(new ChessPlayerMinMax(), new ChessPlayerHuman(TestBoard));
+                    SetUpNewGameThread = Task.Factory.StartNew(() =>
+                    {
+                        MessageBox.Show(TestBoard.Winner.GetType() + " won!");
+                        TestBoard.SetUpNewGame(new ChessPlayerMinMax(), new ChessPlayerHuman(TestBoard));
+                        SetUpNewGameThread = null;
+                    });
                 }
             }
 
