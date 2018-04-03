@@ -4,18 +4,18 @@ using System.Windows.Forms;
 namespace XNAChessAI
 {
 #if WINDOWS || XBOX
-    static class Program
+    public static class Program
     {
+        public static Game1 game;
+
         static void Main(string[] args)
         {
             Console.WriteLine("Created using XNA!");
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            using (Game1 game = new Game1())
-            {
-                game.Run();
-            }
+            game = new Game1();
+            game.Run();
         }
     }
 #endif

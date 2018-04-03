@@ -843,6 +843,9 @@ namespace XNAChessAI
 
                 if (Pieces[to.X, to.Y] == TopKing)
                 {
+                    if (this == Program.game.TestBoard)
+                        Debug.WriteLine("");
+
                     GameEnded = true;
                     OnGameEnd();
                     Winner = PlayerBottom;
@@ -855,6 +858,9 @@ namespace XNAChessAI
                 }
                 if (Pieces[to.X, to.Y] == BottomKing)
                 {
+                    if (this == Program.game.TestBoard)
+                        Debug.WriteLine("");
+
                     GameEnded = true;
                     OnGameEnd();
                     Winner = PlayerTop;

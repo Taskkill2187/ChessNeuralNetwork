@@ -215,8 +215,8 @@ namespace XNAChessAI
                     if (Clone.GameEnded && Clone.Winner != this)
                         continue;
                     Moves[i].rating = EvaluationFunction(Clone);
-                    //if (Moves[i].rating < lastMove.rating)
-                    //    continue;
+                    if (Moves[i].rating < lastMove.rating)
+                        continue;
                     if (Clone.Winner == this)
                         return new Move(Moves[i].From, Moves[i].To, int.MaxValue);
                     Move minimax = MiniMax(depth - 1, Clone, Moves[i], !maximising);
@@ -237,10 +237,10 @@ namespace XNAChessAI
                     ChessBoard Clone = (ChessBoard)Board.Clone();
                     Clone.MovePiece(Moves[i].From, Moves[i].To);
                     if (Clone.GameEnded && Clone.Winner != this)
-                        continue;
+                        return new Move(Moves[i].From, Moves[i].To, int.MinValue);
                     Moves[i].rating = EvaluationFunction(Clone);
-                    //if (Moves[i].rating > lastMove.rating)
-                    //    continue;
+                    if (Moves[i].rating > lastMove.rating)
+                        continue;
                     Move minimax = MiniMax(depth - 1, Clone, Moves[i], !maximising);
                     if (minimax.rating < bestMove.rating)
                         bestMove = Moves[i];

@@ -58,6 +58,7 @@ namespace XNAChessAI
             spriteBatch = new SpriteBatch(GraphicsDevice);
             Assets.Load(Content, GraphicsDevice);
             EvoControl.Show();
+            EvoControl.WindowState = FormWindowState.Minimized;
             TestBoard.SetUpNewGame(new ChessPlayerMinMax(), new ChessPlayerHuman(TestBoard));
         }
 
