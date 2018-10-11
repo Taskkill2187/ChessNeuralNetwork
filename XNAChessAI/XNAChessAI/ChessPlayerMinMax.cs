@@ -228,7 +228,7 @@ namespace XNAChessAI
                 return bestMove;
             }
             else
-            {
+            { 
                 Moves = GetAllMoves(Board, Board.GetOponent(this));
                 Move bestMove = new Move();
                 bestMove.rating = int.MaxValue;

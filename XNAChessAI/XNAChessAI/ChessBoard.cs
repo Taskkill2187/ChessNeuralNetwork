@@ -789,25 +789,15 @@ namespace XNAChessAI
 
                 if (Pieces[to.X, to.Y] == TopKing)
                 {
-                    GameEnded = true;
-                    OnGameEnd();
-                    Winner = PlayerBottom;
-                    GameLengths.Add(Turns);
-                    NormallyEndedGames++;
-                    Turns = 0;
+                    EndGameNormally(PlayerBottom, from);
 
                     if (slow)
                         Thread.Sleep(3000);
                 }
                 if (Pieces[to.X, to.Y] == BottomKing)
                 {
-                    GameEnded = true;
-                    OnGameEnd();
-                    Winner = PlayerTop;
-                    GameLengths.Add(Turns);
-                    NormallyEndedGames++;
-                    Turns = 0;
-
+                    EndGameNormally(PlayerTop, from);
+                    
                     if (slow)
                         Thread.Sleep(3000);
                 }
@@ -818,7 +808,7 @@ namespace XNAChessAI
 
                 ThreefoldRepetitionCheck[to.X, to.Y, (int)Pieces[to.X, to.Y].Type + (Pieces[to.X, to.Y].Parent == PlayerBottom ? 0 : 6)]++;
                 if (ThreefoldRepetitionCheck[to.X, to.Y, (int)Pieces[to.X, to.Y].Type + (Pieces[to.X, to.Y].Parent == PlayerBottom ? 0 : 6)] >= AllowedRepetitions)
-                    EndGameBecauseOfRecurrence(PlayerWhoHasTheMove());
+                    EndGameBecauseOfRecurrence(PlayerWhoHasTheMove(), from);
 
                 Turn = !Turn;
                 PlayerWhoHasTheMove().TurnStarted();
@@ -843,30 +833,14 @@ namespace XNAChessAI
 
                 if (Pieces[to.X, to.Y] == TopKing)
                 {
-                    if (this == Program.game.TestBoard)
-                        Debug.WriteLine("");
-
-                    GameEnded = true;
-                    OnGameEnd();
-                    Winner = PlayerBottom;
-                    GameLengths.Add(Turns);
-                    NormallyEndedGames++;
-                    Turns = 0;
+                    EndGameNormally(PlayerBottom, from);
 
                     if (slow)
                         Thread.Sleep(3000);
                 }
                 if (Pieces[to.X, to.Y] == BottomKing)
                 {
-                    if (this == Program.game.TestBoard)
-                        Debug.WriteLine("");
-
-                    GameEnded = true;
-                    OnGameEnd();
-                    Winner = PlayerTop;
-                    GameLengths.Add(Turns);
-                    NormallyEndedGames++;
-                    Turns = 0;
+                    EndGameNormally(PlayerTop, from);
 
                     if (slow)
                         Thread.Sleep(3000);
@@ -878,7 +852,7 @@ namespace XNAChessAI
 
                 ThreefoldRepetitionCheck[to.X, to.Y, (int)Pieces[to.X, to.Y].Type + (Pieces[to.X, to.Y].Parent == PlayerBottom ? 0 : 6)]++;
                 if (ThreefoldRepetitionCheck[to.X, to.Y, (int)Pieces[to.X, to.Y].Type + (Pieces[to.X, to.Y].Parent == PlayerBottom ? 0 : 6)] >= AllowedRepetitions)
-                    EndGameBecauseOfRecurrence(PlayerWhoHasTheMove());
+                    EndGameBecauseOfRecurrence(PlayerWhoHasTheMove(), from);
 
                 Turn = !Turn;
                 PlayerWhoHasTheMove().TurnStarted();
@@ -886,8 +860,11 @@ namespace XNAChessAI
             else
                 throw new ArgumentException();
         }
-        public void EndGameBecauseOfRecurrence(ChessPlayer FaultyPlayer)
+        void EndGameBecauseOfRecurrence(ChessPlayer FaultyPlayer, Point from)
         {
+            if (this == Program.game.TestBoard)
+                GetAllPossibleMovesForPiece(from);
+
             GameEnded = true;
             OnGameEnd();
             GameLengths.Add(Turns);
@@ -900,6 +877,18 @@ namespace XNAChessAI
                 Winner = PlayerTop;
             else
                 throw new Exception("wat");
+        }
+        void EndGameNormally(ChessPlayer Winner, Point from)
+        {
+            if (this == Program.game.TestBoard)
+                GetAllPossibleMovesForPiece(from);
+
+            GameEnded = true;
+            OnGameEnd();
+            this.Winner = Winner;
+            GameLengths.Add(Turns);
+            NormallyEndedGames++;
+            Turns = 0;
         }
         public void OnGameEnd()
         {
